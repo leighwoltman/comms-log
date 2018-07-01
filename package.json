@@ -1,0 +1,24 @@
+{
+  "name": "comms-log",
+  "version": "1.0.0",
+  "description": "scripts to make chronilogical communication history out of data exported from online services",
+  "main": "index.js",
+  "dependencies": {
+    "fs-extra": "^6.0.1",
+    "moment": "^2.22.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/leighwoltman/comms-log.git"
+  },
+  "author": "Leigh Woltman",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/leighwoltman/comms-log/issues"
+  },
+  "homepage": "https://github.com/leighwoltman/comms-log#readme"
+}
