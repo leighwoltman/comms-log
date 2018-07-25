@@ -4,8 +4,12 @@
   "description": "scripts to make chronilogical communication history out of data exported from online services",
   "main": "index.js",
   "dependencies": {
+    "fast-xml-parser": "^3.11.1",
     "fs-extra": "^6.0.1",
-    "moment": "^2.22.2"
+    "html-entities": "^1.2.1",
+    "mailparser": "^2.2.0",
+    "moment": "^2.22.2",
+    "node-mbox": "^1.0.0"
   },
   "devDependencies": {},
   "scripts": {
