@@ -59,7 +59,8 @@ var Settings = {
     },
     sms: {
         phoneName: ""
-    }
+    },
+    filter: []
 };
 
 if (fs.existsSync(SettingsFile)) {
@@ -84,27 +85,117 @@ processHangouts(records, () => {
 
             const entities = new Entities();
 
-            for(let i = 0; i < records.length; i++) {
+            // create a starting timestamp, and then iterate by days
+            let dayIndex = moment("2015-01-01", "YYYY-MM-DD");
 
-                let record = records[i];
+            // get all the messages from this day
 
-                if(record.value.toString().trim() != "" && !isFilteredTimestamp(record.timestamp))
-                {
+            while(records.length > 0) {
+
+                let daysRecords = [];
+
+                // take the first one
+                let record = records[0];
+
+                while(record.timestamp < dayIndex.valueOf()) {
+                    // remove it
+                    records.shift();
+                    
+                    if(!filterRecord(record)) 
+                    {
+                        if(record.value.toString().trim() != "" && !isFilteredTimestamp(record.timestamp))
+                        {
+                            daysRecords.push( record );
+                        }
+                    }
+
+                    // and get the next
+                    if(records.length > 0) {
+                        record = records[0];
+                    } else {
+                        break;
+                    }
+                }
+
+                if(daysRecords.length > 0) {
+                    // then we want to indicate the number of days here
+                    console.log(moment(dayIndex).format("YYYY-MM-DD") + ": " + daysRecords.length + " messages");
+
+                    let videoCalls = 0;
+                    let emails = 0;
+                    let texts = 0;
+                    let allText = "";
+
+                    for(let i = 0; i < daysRecords.length; i++) {
+                        if(daysRecords[i].type == "Text") {
+                            texts++;
+                        } else if(daysRecords[i].type == "Video Call") {
+                            videoCalls++;
+                        } else if(daysRecords[i].type == "Email") {
+                            emails++;
+                        }
+                        if(allText != "") {
+                            allText += " ■ ";
+                        }
+                        allText += daysRecords[i].value.toString().substr(0, 200);
+                    }
+
+                    let types = "";
+                    if(videoCalls > 0) {
+                        types += videoCalls + " Video Call" + (videoCalls > 1 ? "s" : "");
+                    }
+                    if(emails > 0) {
+                        if(types != "") {
+                            types += ", ";
+                        }
+                        types += emails + " Email" + (emails > 1 ? "s" : "");
+                    }
+                    if(texts > 0) {
+                        if(types != "") {
+                            types += ", ";
+                        }
+                        types += texts + " Text" + (texts > 1 ? "s" : "");
+                    }
+
                     htmlOutput += "<tr>\n";
 
-                    htmlOutput += "<td>" + moment(record.timestamp).format("YYYY-MM-DD HH:mm") + "</td>\n";
+                    htmlOutput += "<td>" + moment(daysRecords[0].timestamp).format("YYYY-MM-DD HH:mm") + "</td>\n";
                     //htmlOutput += "<td>" + record.timestamp + "</td>\n";
-                    htmlOutput += "<td>" + record.source + "</td>\n";
-                    htmlOutput += "<td>" + record.type + "</td>\n";
-                    htmlOutput += "<td>" + record.from + "</td>\n";
-                    htmlOutput += "<td>" + record.to + "</td>\n";
-                    htmlOutput += "<td>" + record.value.toString().substr(0, 200) + "</td>\n";
+                    htmlOutput += "<td>" + types + "</td>\n";
+                    htmlOutput += "<td>" + allText + "</td>\n";
 
                     htmlOutput += "</tr>\n";
-
-                    console.log((i/records.length * 100).toFixed(0) + "% done");
                 }
+
+                
+                // increment the day to the next
+                dayIndex = dayIndex.add(1, 'hours');
             }
+
+            // for(let i = 0; i < records.length; i++) {
+
+            //     let record = records[i];
+
+            //     if(!filterRecord(record)) 
+            //     {
+            //         if(record.value.toString().trim() != "" && !isFilteredTimestamp(record.timestamp))
+            //         {
+            //             htmlOutput += "<tr>\n";
+
+            //             htmlOutput += "<td>" + moment(record.timestamp).format("YYYY-MM-DD HH:mm") + "</td>\n";
+            //             //htmlOutput += "<td>" + record.timestamp + "</td>\n";
+            //             htmlOutput += "<td>" + record.source + "</td>\n";
+            //             htmlOutput += "<td>" + record.type + "</td>\n";
+            //             htmlOutput += "<td>" + record.from + "</td>\n";
+            //             htmlOutput += "<td>" + record.to + "</td>\n";
+            //             htmlOutput += "<td>" + record.value.toString().substr(0, 200) + "</td>\n";
+
+            //             htmlOutput += "</tr>\n";
+
+            //             console.log((i/records.length * 100).toFixed(0) + "% done");
+            //         }
+            //     }
+            // }
 
             htmlOutput += "</table></body></html>\n";
 
@@ -116,6 +207,16 @@ processHangouts(records, () => {
         });
     });
 });
+
+function filterRecord(record) {
+    for(var i = 0; i < Settings.filter.length; i++) {
+        if(record.value.toString().toLowerCase().includes(Settings.filter[i]))
+        {
+            return true;
+        }
+    }
+    return false;
+}
 
 
 function processHangouts(records, onComplete) {
